@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore tests
+        run: dotnet restore tests/RecipeShopper.Domain.Tests/RecipeShopper.Domain.Tests.csproj
+      - name: Restore infrastructure tests
+        run: dotnet restore tests/RecipeShopper.Infrastructure.Tests/RecipeShopper.Infrastructure.Tests.csproj
+      - name: Test
+        run: dotnet test tests/RecipeShopper.Domain.Tests/RecipeShopper.Domain.Tests.csproj --no-restore --configuration Release
+      - name: Test infrastructure
+        run: dotnet test tests/RecipeShopper.Infrastructure.Tests/RecipeShopper.Infrastructure.Tests.csproj --no-restore --configuration Release
+
+  android:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Install Android workload
+        run: dotnet workload install android
+      - name: Build Android
+        run: dotnet build src/RecipeShopper.App/RecipeShopper.App.csproj -f net10.0-android --configuration Release
+
+  ios-compile:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Install iOS workload
+        run: dotnet workload install ios
+      - name: Compile iOS simulator
+        run: dotnet build src/RecipeShopper.App/RecipeShopper.App.csproj -f net10.0-ios --configuration Release -p:RuntimeIdentifier=iossimulator-arm64

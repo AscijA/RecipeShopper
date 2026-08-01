@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="RecipeShopper.App.Presentation.Views.RecipeDetailPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:RecipeShopper.App.Presentation.Models"
+    xmlns:vm="clr-namespace:RecipeShopper.App.Presentation.ViewModels"
+    x:DataType="vm:RecipeDetailViewModel"
+    Title="{Binding Title}">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Command="{Binding EditCommand}" Text="Uredi" />
+    </ContentPage.ToolbarItems>
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <Image Aspect="AspectFill" HeightRequest="220" IsVisible="{Binding HasImage}" Source="{Binding ImagePath}" />
+            <Border IsVisible="{Binding HasImage, Converter={StaticResource InverseBoolConverter}}" StrokeThickness="0" HeightRequest="130">
+                <Label FontSize="64" HorizontalOptions="Center" Text="{Binding Recipe.Icon}" VerticalOptions="Center" />
+            </Border>
+            <VerticalStackLayout Spacing="3">
+                <Label Style="{StaticResource PageTitle}" Text="{Binding Recipe.Name}" />
+                <Label Style="{StaticResource Caption}" Text="{Binding Recipe.Category}" />
+            </VerticalStackLayout>
+            <Label IsVisible="{Binding Recipe.Notes, Converter={StaticResource StringNotEmptyConverter}}" Text="{Binding Recipe.Notes}" />
+
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Style="{StaticResource SectionTitle}" Text="Namirnice" VerticalOptions="Center" />
+                <Button Grid.Column="1" Command="{Binding ToggleAllCommand}" Style="{StaticResource GhostButton}" Text="Označi / poništi sve" />
+            </Grid>
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Ingredients}" Spacing="8">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:RecipeIngredientItem">
+                        <Border Padding="10">
+                            <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
+                                <CheckBox IsChecked="{Binding IsSelected}" />
+                                <Label Grid.Column="1" FontSize="22" Text="{Binding Icon}" VerticalOptions="Center" />
+                                <Label Grid.Column="2" Text="{Binding IngredientName}" VerticalOptions="Center" />
+                                <Label Grid.Column="3" FontFamily="OpenSansSemibold" Text="{Binding AmountText}" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <Label Style="{StaticResource SectionTitle}" Text="Količina recepta" />
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                <Button Command="{Binding SetMultiplierCommand}" CommandParameter="0.5" Style="{StaticResource SecondaryButton}" Text="×0.5" />
+                <Button Grid.Column="1" Command="{Binding SetMultiplierCommand}" CommandParameter="1" Style="{StaticResource SecondaryButton}" Text="×1" />
+                <Button Grid.Column="2" Command="{Binding SetMultiplierCommand}" CommandParameter="2" Style="{StaticResource SecondaryButton}" Text="×2" />
+                <Border Grid.Column="3" Padding="8,0"><Entry HorizontalTextAlignment="Center" Keyboard="Numeric" Text="{Binding MultiplierText}" /></Border>
+            </Grid>
+            <Button Command="{Binding AddToShoppingCommand}" Text="Dodaj odabrano u kupovinu" />
+            <Button Command="{Binding DeleteCommand}" Style="{StaticResource DangerButton}" Text="Obriši recept" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

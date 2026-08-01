@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="RecipeShopper.App.Presentation.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:RecipeShopper.App.Presentation.ViewModels"
+    x:DataType="vm:SettingsViewModel"
+    Shell.NavBarIsVisible="False">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,18,20,28" Spacing="12">
+            <VerticalStackLayout Spacing="1">
+                <Label Style="{StaticResource PageTitle}" Text="Postavke" />
+                <Label Style="{StaticResource Caption}" Text="Izgled, kupovina, plan i podaci" />
+            </VerticalStackLayout>
+
+            <Label Style="{StaticResource SectionTitle}" Text="Izgled" />
+            <Border><Grid ColumnDefinitions="*,*"><Label Text="Tema" VerticalOptions="Center" /><Picker Grid.Column="1" ItemsSource="{Binding AppearanceOptions}" SelectedItem="{Binding SelectedAppearance}" /></Grid></Border>
+            <Border><Grid ColumnDefinitions="*,*"><Label Text="Akcent" VerticalOptions="Center" /><Picker Grid.Column="1" ItemsSource="{Binding AccentOptions}" SelectedItem="{Binding SelectedAccent}" /></Grid></Border>
+
+            <Label Style="{StaticResource SectionTitle}" Text="Kupovina" />
+            <Border><Grid ColumnDefinitions="*,*"><Label Text="Početno grupiranje" VerticalOptions="Center" /><Picker Grid.Column="1" ItemsSource="{Binding GroupingOptions}" SelectedItem="{Binding DefaultGrouping}" /></Grid></Border>
+            <Border><Grid ColumnDefinitions="*,Auto"><Label Text="Označeno pomjeri na dno" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding MoveCheckedToBottom}" /></Grid></Border>
+            <Border><Grid ColumnDefinitions="*,Auto"><Label Text="Sakrij označene stavke" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding HideChecked}" /></Grid></Border>
+            <Border><Grid ColumnDefinitions="*,Auto"><Label Text="Potvrdi brisanje" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding ConfirmDestructiveActions}" /></Grid></Border>
+
+            <Label Style="{StaticResource SectionTitle}" Text="Plan obroka" />
+            <Border><Grid ColumnDefinitions="*,Auto"><Label Text="Referentni ponedjeljak (A)" VerticalOptions="Center" /><DatePicker Grid.Column="1" Date="{Binding ReferenceMonday}" /></Grid></Border>
+            <Border><Grid ColumnDefinitions="*,Auto"><Label Text="Dnevni podsjetnik" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding ReminderEnabled}" /></Grid></Border>
+            <Border><Grid ColumnDefinitions="*,Auto"><Label Text="Vrijeme podsjetnika" VerticalOptions="Center" /><TimePicker Grid.Column="1" Time="{Binding ReminderTime}" /></Grid></Border>
+
+            <Label Style="{StaticResource SectionTitle}" Text="Katalozi i regija" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button Command="{Binding ManageCategoriesCommand}" Style="{StaticResource SecondaryButton}" Text="Kategorije" />
+                <Button Grid.Column="1" Command="{Binding ManageStoresCommand}" Style="{StaticResource SecondaryButton}" Text="Trgovine" />
+            </Grid>
+            <Border><Grid ColumnDefinitions="*,*"><Label Text="Valuta" VerticalOptions="Center" /><Picker Grid.Column="1" ItemsSource="{Binding CurrencyOptions}" SelectedItem="{Binding Currency}" /></Grid></Border>
+
+            <Label Style="{StaticResource SectionTitle}" Text="Podaci" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button Command="{Binding ImportCommand}" Style="{StaticResource SecondaryButton}" Text="Uvezi JSON" />
+                <Button Grid.Column="1" Command="{Binding ExportCommand}" Style="{StaticResource SecondaryButton}" Text="Izvezi JSON" />
+            </Grid>
+            <Button Command="{Binding ResetCommand}" Style="{StaticResource DangerButton}" Text="Vrati početne podatke" />
+
+            <Border>
+                <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
+                    <Label FontFamily="OpenSansSemibold" Text="{Binding VersionText}" />
+                    <Label Style="{StaticResource Caption}" Text="Offline recepti, plan obroka i pametna kupovina" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

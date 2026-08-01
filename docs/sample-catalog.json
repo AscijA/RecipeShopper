@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "documentType": "recipe-shopper-catalog",
+  "categories": [
+    {
+      "name": "Slatko",
+      "iconKey": "category-sweet",
+      "sortOrder": 0
+    }
+  ],
+  "packageTypes": [
+    {
+      "name": "Kesica",
+      "unitLabel": "kesica",
+      "sortOrder": 0
+    }
+  ],
+  "stores": [
+    {
+      "name": "Bingo",
+      "isEnabled": true,
+      "sortOrder": 0
+    }
+  ],
+  "ingredients": [
+    {
+      "name": "Brašno",
+      "iconKey": "ingredient-flour",
+      "measurementFamily": "Mass",
+      "baseUnit": "g",
+      "packages": [
+        {
+          "packageTypeName": "Kesica",
+          "label": "1 kg",
+          "netQuantity": {
+            "amount": "1000",
+            "unit": "g"
+          },
+          "offers": [
+            {
+              "storeName": "Bingo",
+              "currentPrice": {
+                "minorUnits": 220,
+                "currency": "BAM"
+              },
+              "priceUpdatedAtUtc": "2026-08-01T00:00:00Z",
+              "isAvailable": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "recipes": [
+    {
+      "name": "Jednostavno tijesto",
+      "categoryName": "Slatko",
+      "notes": "Primjer recepta za JSON uvoz.",
+      "ingredients": [
+        {
+          "ingredientName": "Brašno",
+          "quantity": {
+            "amount": "500",
+            "unit": "g"
+          },
+          "sortOrder": 0
+        }
+      ]
+    }
+  ]
+}

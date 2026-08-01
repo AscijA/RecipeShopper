@@ -1,0 +1,206 @@
+name: Signed mobile release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, for example v1.0.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}-${{ inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  PROJECT_FILE: src/RecipeShopper.App/RecipeShopper.App.csproj
+  DOTNET_NOLOGO: true
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+
+jobs:
+  test:
+    name: Test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore tests
+        run: |
+          dotnet restore tests/RecipeShopper.Domain.Tests/RecipeShopper.Domain.Tests.csproj
+          dotnet restore tests/RecipeShopper.Infrastructure.Tests/RecipeShopper.Infrastructure.Tests.csproj
+      - name: Run tests
+        run: |
+          dotnet test tests/RecipeShopper.Domain.Tests/RecipeShopper.Domain.Tests.csproj --configuration Release --no-restore
+          dotnet test tests/RecipeShopper.Infrastructure.Tests/RecipeShopper.Infrastructure.Tests.csproj --configuration Release --no-restore
+
+  android:
+    name: Android APK and AAB
+    needs: test
+    runs-on: windows-latest
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Install MAUI Android workload
+        run: dotnet workload install maui-android
+      - name: Validate Android signing secrets
+        shell: pwsh
+        run: |
+          $required = @(
+            $env:ANDROID_KEYSTORE_BASE64,
+            $env:ANDROID_KEY_ALIAS,
+            $env:ANDROID_KEY_PASSWORD,
+            $env:ANDROID_STORE_PASSWORD
+          )
+          if ($required.Where({ [string]::IsNullOrWhiteSpace($_) }).Count -gt 0) {
+            throw "One or more Android signing secrets are missing. See docs/github-release-signing.md."
+          }
+      - name: Restore Android signing key
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP\signing" | Out-Null
+          [IO.File]::WriteAllBytes(
+            "$env:RUNNER_TEMP\signing\release.keystore",
+            [Convert]::FromBase64String($env:ANDROID_KEYSTORE_BASE64)
+          )
+      - name: Publish signed Android packages
+        shell: pwsh
+        run: |
+          $releaseVersion = $env:RELEASE_TAG.TrimStart('v')
+          dotnet publish $env:PROJECT_FILE `
+            -f net10.0-android `
+            -c Release `
+            -p:ApplicationDisplayVersion="$releaseVersion" `
+            -p:ApplicationVersion="$env:GITHUB_RUN_NUMBER" `
+            -p:AndroidPackageFormats="apk;aab" `
+            -p:AndroidKeyStore=true `
+            -p:AndroidSigningKeyStore="$env:RUNNER_TEMP\signing\release.keystore" `
+            -p:AndroidSigningKeyAlias="$env:ANDROID_KEY_ALIAS" `
+            -p:AndroidSigningKeyPass="$env:ANDROID_KEY_PASSWORD" `
+            -p:AndroidSigningStorePass="$env:ANDROID_STORE_PASSWORD"
+      - name: Collect Android packages
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          Get-ChildItem "src\RecipeShopper.App\bin\Release\net10.0-android\publish" -File |
+            Where-Object Extension -In '.apk', '.aab' |
+            Copy-Item -Destination artifacts
+          if ((Get-ChildItem artifacts -File).Count -lt 2) {
+            throw "Expected both a signed APK and AAB."
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: artifacts/*
+          if-no-files-found: error
+
+  ios:
+    name: iOS IPA
+    needs: test
+    runs-on: macos-15
+    env:
+      IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+      IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+      IOS_CODESIGN_KEY: ${{ secrets.IOS_CODESIGN_KEY }}
+      IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+      IOS_PROVISIONING_PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
+      KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Install MAUI iOS workload
+        run: dotnet workload install maui-ios
+      - name: Validate iOS signing secrets
+        shell: bash
+        run: |
+          required=(
+            IOS_CERTIFICATE_BASE64 IOS_CERTIFICATE_PASSWORD IOS_CODESIGN_KEY
+            IOS_PROVISIONING_PROFILE_BASE64 IOS_PROVISIONING_PROFILE_NAME KEYCHAIN_PASSWORD
+          )
+          for name in "${required[@]}"; do
+            if [[ -z "${!name}" ]]; then
+              echo "Missing secret: $name" >&2
+              exit 1
+            fi
+          done
+      - name: Install Apple certificate and provisioning profile
+        shell: bash
+        run: |
+          CERTIFICATE_PATH="$RUNNER_TEMP/distribution.p12"
+          PROFILE_PATH="$RUNNER_TEMP/profile.mobileprovision"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+
+          echo -n "$IOS_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+          echo -n "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/release.mobileprovision"
+      - name: Publish signed IPA
+        shell: bash
+        run: |
+          RELEASE_VERSION="${RELEASE_TAG#v}"
+          dotnet publish "$PROJECT_FILE" \
+            -f net10.0-ios \
+            -c Release \
+            -p:ApplicationDisplayVersion="$RELEASE_VERSION" \
+            -p:ApplicationVersion="$GITHUB_RUN_NUMBER" \
+            -p:RuntimeIdentifier=ios-arm64 \
+            -p:ArchiveOnBuild=true \
+            -p:BuildIpa=true \
+            -p:CodesignKey="$IOS_CODESIGN_KEY" \
+            -p:CodesignProvision="$IOS_PROVISIONING_PROFILE_NAME"
+      - name: Collect IPA
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          find src/RecipeShopper.App/bin/Release/net10.0-ios -type f -name '*.ipa' -exec cp {} artifacts/ \;
+          test -n "$(find artifacts -maxdepth 1 -type f -name '*.ipa' -print -quit)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-release
+          path: artifacts/*.ipa
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: [android, ios]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-release"
+          path: release-files
+          merge-multiple: true
+      - name: Create release and upload packages
+        shell: bash
+        run: |
+          gh release create "$RELEASE_TAG" release-files/* \
+            --target "$GITHUB_SHA" \
+            --title "Moji Recepti $RELEASE_TAG" \
+            --generate-notes

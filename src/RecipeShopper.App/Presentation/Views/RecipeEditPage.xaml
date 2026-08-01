@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="RecipeShopper.App.Presentation.Views.RecipeEditPage"
+    x:Name="RecipeEditRoot"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:RecipeShopper.App.Presentation.Models"
+    xmlns:vm="clr-namespace:RecipeShopper.App.Presentation.ViewModels"
+    x:DataType="vm:RecipeEditViewModel"
+    Title="{Binding Title}">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14">
+            <Label Style="{StaticResource SectionTitle}" Text="Osnovno" />
+            <Border Padding="10,0"><Entry Placeholder="Naziv recepta" Text="{Binding Name}" /></Border>
+            <Border Padding="10,0"><Picker ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Title="Kategorija" /></Border>
+            <Border><Editor AutoSize="TextChanges" Placeholder="Bilješke (opcionalno)" Text="{Binding Notes}" /></Border>
+
+            <Label Style="{StaticResource SectionTitle}" Text="Fotografija" />
+            <Image Aspect="AspectFill" HeightRequest="180" IsVisible="{Binding HasPhoto}" Source="{Binding PhotoPreviewPath}" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button Command="{Binding PickPhotoCommand}" Style="{StaticResource SecondaryButton}" Text="Galerija" />
+                <Button Grid.Column="1" Command="{Binding CapturePhotoCommand}" Style="{StaticResource SecondaryButton}" Text="Kamera" />
+            </Grid>
+            <Button Command="{Binding RemovePhotoCommand}" IsVisible="{Binding HasPhoto}" Style="{StaticResource GhostButton}" Text="Ukloni fotografiju" />
+
+            <Label Style="{StaticResource SectionTitle}" Text="Namirnice" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Border Padding="8,0"><Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding AvailableIngredients}" SelectedItem="{Binding SelectedCatalogIngredient}" Title="Odaberi namirnicu" /></Border>
+                <Button Grid.Column="1" Command="{Binding AddIngredientCommand}" Text="Dodaj" />
+            </Grid>
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Ingredients}" Spacing="8">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:RecipeIngredientDraft">
+                        <Border>
+                            <Grid ColumnDefinitions="Auto,*,80,95,Auto" ColumnSpacing="6">
+                                <Label FontSize="22" Text="{Binding Icon}" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding IngredientName}" VerticalOptions="Center" />
+                                <Entry Grid.Column="2" HorizontalTextAlignment="End" Keyboard="Numeric" Placeholder="Količina" Text="{Binding Amount}" />
+                                <Picker Grid.Column="3" ItemsSource="{Binding Source={x:Reference RecipeEditRoot}, Path=BindingContext.Units}" SelectedItem="{Binding Unit}" />
+                                <Button Grid.Column="4" Command="{Binding Source={x:Reference RecipeEditRoot}, Path=BindingContext.RemoveIngredientCommand}" CommandParameter="{Binding .}" Style="{StaticResource GhostButton}" Text="×" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+            <Button Command="{Binding SaveCommand}" Text="Sačuvaj recept" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

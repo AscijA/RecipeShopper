@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="RecipeShopper.App.Presentation.Views.IngredientEditPage"
+    x:Name="IngredientEditRoot"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:RecipeShopper.App.Presentation.Models"
+    xmlns:vm="clr-namespace:RecipeShopper.App.Presentation.ViewModels"
+    x:DataType="vm:IngredientEditViewModel"
+    Title="{Binding Title}">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14">
+            <Label Style="{StaticResource SectionTitle}" Text="Namirnica" />
+            <Grid ColumnDefinitions="80,*" ColumnSpacing="8">
+                <Border Padding="8,0"><Entry FontSize="24" HorizontalTextAlignment="Center" MaxLength="4" Placeholder="🥣" Text="{Binding Icon}" /></Border>
+                <Border Grid.Column="1" Padding="8,0"><Entry Placeholder="Naziv" Text="{Binding Name}" /></Border>
+            </Grid>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Border Padding="8,0"><Picker ItemsSource="{Binding Families}" SelectedItem="{Binding SelectedFamily}" Title="Mjerenje" /></Border>
+                <Border Grid.Column="1" Padding="8,0"><Picker ItemsSource="{Binding Units}" SelectedItem="{Binding BaseUnit}" Title="Osnovna jedinica" /></Border>
+            </Grid>
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Style="{StaticResource SectionTitle}" Text="Pakovanja i cijene" VerticalOptions="Center" />
+                <Button Grid.Column="1" Command="{Binding AddOfferCommand}" Style="{StaticResource SecondaryButton}" Text="+ Ponuda" />
+            </Grid>
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Offers}" Spacing="8">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:PackageOfferItem">
+                        <Border>
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+                                <VerticalStackLayout>
+                                    <Label FontFamily="OpenSansSemibold" Text="{Binding Store}" />
+                                    <Label Style="{StaticResource Caption}" Text="{Binding Description}" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="1" FontFamily="OpenSansSemibold" Text="{Binding PriceText}" VerticalOptions="Center" />
+                                <Button Grid.Column="2" Command="{Binding Source={x:Reference IngredientEditRoot}, Path=BindingContext.RemoveOfferCommand}" CommandParameter="{Binding .}" Style="{StaticResource GhostButton}" Text="×" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+            <Button Command="{Binding SaveCommand}" Text="Sačuvaj namirnicu" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="RecipeShopper.App.Presentation.Views.ShoppingListsPage"
+    x:Name="ListsRoot"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:RecipeShopper.App.Presentation.Models"
+    xmlns:vm="clr-namespace:RecipeShopper.App.Presentation.ViewModels"
+    x:DataType="vm:ShoppingListsViewModel"
+    Title="Moje liste">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+            <Button Command="{Binding CreateCommand}" Text="+ Nova lista" />
+            <Label Style="{StaticResource SectionTitle}" Text="Aktivne liste" />
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding ActiveLists}" Spacing="8">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:NamedShoppingList">
+                        <Border>
+                            <VerticalStackLayout Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout>
+                                        <Label FontFamily="OpenSansSemibold" FontSize="16" Text="{Binding Name}" />
+                                        <Label Style="{StaticResource Caption}" Text="{Binding StatusText}" />
+                                    </VerticalStackLayout>
+                                    <Button Grid.Column="1" Command="{Binding Source={x:Reference ListsRoot}, Path=BindingContext.OpenCommand}" CommandParameter="{Binding .}" Style="{StaticResource SecondaryButton}" Text="Otvori" />
+                                </Grid>
+                                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                    <Button Command="{Binding Source={x:Reference ListsRoot}, Path=BindingContext.RenameCommand}" CommandParameter="{Binding .}" Style="{StaticResource GhostButton}" Text="Preimenuj" />
+                                    <Button Grid.Column="1" Command="{Binding Source={x:Reference ListsRoot}, Path=BindingContext.DuplicateCommand}" CommandParameter="{Binding .}" Style="{StaticResource GhostButton}" Text="Dupliciraj" />
+                                    <Button Grid.Column="2" Command="{Binding Source={x:Reference ListsRoot}, Path=BindingContext.CompleteCommand}" CommandParameter="{Binding .}" Style="{StaticResource GhostButton}" Text="Završi" />
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+            <Label Style="{StaticResource SectionTitle}" Text="Završene liste" />
+            <Label IsVisible="{Binding HasArchivedLists, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource Caption}" Text="Još nema završenih kupovina." />
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding ArchivedLists}" Spacing="8">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:NamedShoppingList">
+                        <Border>
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+                                <VerticalStackLayout>
+                                    <Label FontFamily="OpenSansSemibold" Text="{Binding Name}" />
+                                    <Label Style="{StaticResource Caption}" Text="{Binding StatusText}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Command="{Binding Source={x:Reference ListsRoot}, Path=BindingContext.DuplicateCommand}" CommandParameter="{Binding .}" Style="{StaticResource SecondaryButton}" Text="Dupliciraj" />
+                                <Button Grid.Column="2" Command="{Binding Source={x:Reference ListsRoot}, Path=BindingContext.DeleteCommand}" CommandParameter="{Binding .}" Style="{StaticResource GhostButton}" Text="Obriši" TextColor="{StaticResource Danger}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

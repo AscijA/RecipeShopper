@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RecipeShopper.App/RecipeShopper.App.csproj" />
+    <Project Path="src/RecipeShopper.Application/RecipeShopper.Application.csproj" />
+    <Project Path="src/RecipeShopper.Domain/RecipeShopper.Domain.csproj" />
+    <Project Path="src/RecipeShopper.Infrastructure/RecipeShopper.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RecipeShopper.Domain.Tests/RecipeShopper.Domain.Tests.csproj" />
+    <Project Path="tests/RecipeShopper.Infrastructure.Tests/RecipeShopper.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

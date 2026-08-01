@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="RecipeShopper.App.Presentation.Views.RecipesPage"
+    x:Name="RecipesRoot"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:RecipeShopper.App.Presentation.Models"
+    xmlns:vm="clr-namespace:RecipeShopper.App.Presentation.ViewModels"
+    x:DataType="vm:RecipesViewModel"
+    Shell.NavBarIsVisible="False">
+    <Grid Padding="20,18,20,10" RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto">
+            <VerticalStackLayout Spacing="1">
+                <Label Style="{StaticResource PageTitle}" Text="Recepti" />
+                <Label Style="{StaticResource Caption}" Text="Odaberite recepte ili otvorite detalje" />
+            </VerticalStackLayout>
+            <Button Grid.Column="1" Command="{Binding NewRecipeCommand}" FontSize="26" Padding="14,5" SemanticProperties.Description="Dodaj recept" Text="+" />
+        </Grid>
+
+        <Border Grid.Row="1" Padding="4">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+                <Button Command="{Binding RefreshCommand, FallbackValue={x:Null}}" IsEnabled="False" Text="Recepti" />
+                <Button Grid.Column="1" Command="{Binding OpenPlannerCommand}" Style="{StaticResource SecondaryButton}" Text="Plan obroka" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" ColumnDefinitions="2*,*" ColumnSpacing="10">
+            <SearchBar Placeholder="Pretraži recepte" Text="{Binding Query}" />
+            <Border Grid.Column="1" Padding="8,0">
+                <Picker ItemsSource="{Binding CategoryFilters}" SelectedItem="{Binding SelectedCategory}" Title="Kategorija" />
+            </Border>
+        </Grid>
+
+        <CollectionView Grid.Row="3" ItemsSource="{Binding VisibleRecipes}" SelectionMode="None">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Margin="20,60" HorizontalOptions="Center" Spacing="10">
+                    <Label FontSize="42" HorizontalTextAlignment="Center" Text="🍽️" />
+                    <Label Style="{StaticResource SectionTitle}" Text="Nema recepata" />
+                    <Label Style="{StaticResource Caption}" HorizontalTextAlignment="Center" Text="Dodajte prvi recept pomoću dugmeta +." />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:RecipeItem">
+                    <Border Margin="0,0,0,10">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding Source={x:Reference RecipesRoot}, Path=BindingContext.OpenRecipeCommand}" CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="12">
+                            <CheckBox IsChecked="{Binding IsSelected}" />
+                            <Border Grid.Column="1" Padding="10" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#F3EEE6, Dark=#313A35}">
+                                <Label FontSize="25" Text="{Binding Icon}" />
+                            </Border>
+                            <VerticalStackLayout Grid.Column="2" VerticalOptions="Center" Spacing="3">
+                                <Label FontFamily="OpenSansSemibold" FontSize="16" Text="{Binding Name}" />
+                                <Label Style="{StaticResource Caption}" Text="{Binding Category}" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="3" FontSize="22" Text="›" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Button Grid.Row="4" Command="{Binding AddSelectedCommand}" Text="Dodaj označene" />
+    </Grid>
+</ContentPage>
