@@ -87,7 +87,7 @@ jobs:
             -p:RecipeShopperTargetFrameworks=net10.0-android `
             -p:ApplicationDisplayVersion="$releaseVersion" `
             -p:ApplicationVersion="$env:GITHUB_RUN_NUMBER" `
-            -p:AndroidPackageFormats="apk;aab" `
+            -p:AndroidPackageFormats=apk%3Baab `
             -p:AndroidKeyStore=true `
             -p:AndroidSigningKeyStore="$env:RUNNER_TEMP\signing\release.keystore" `
             -p:AndroidSigningKeyAlias="$env:ANDROID_KEY_ALIAS" `
