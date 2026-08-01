@@ -84,7 +84,7 @@ jobs:
           dotnet publish $env:PROJECT_FILE `
             -f net10.0-android `
             -c Release `
-            -p:TargetFrameworks=net10.0-android `
+            -p:RecipeShopperTargetFrameworks=net10.0-android `
             -p:ApplicationDisplayVersion="$releaseVersion" `
             -p:ApplicationVersion="$env:GITHUB_RUN_NUMBER" `
             -p:AndroidPackageFormats="apk;aab" `
@@ -166,7 +166,7 @@ jobs:
           dotnet publish "$PROJECT_FILE" \
             -f net10.0-ios \
             -c Release \
-            -p:TargetFrameworks=net10.0-ios \
+            -p:RecipeShopperTargetFrameworks=net10.0-ios \
             -p:ApplicationDisplayVersion="$RELEASE_VERSION" \
             -p:ApplicationVersion="$GITHUB_RUN_NUMBER" \
             -p:RuntimeIdentifier=ios-arm64 \
