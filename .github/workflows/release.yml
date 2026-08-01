@@ -81,6 +81,8 @@ jobs:
         shell: pwsh
         run: |
           $releaseVersion = $env:RELEASE_TAG.TrimStart('v')
+          $publishPath = "src\RecipeShopper.App\bin\Release\net10.0-android\publish"
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
           dotnet publish $env:PROJECT_FILE `
             -f net10.0-android `
             -c Release `
@@ -93,6 +95,11 @@ jobs:
             -p:AndroidSigningKeyAlias="$env:ANDROID_KEY_ALIAS" `
             -p:AndroidSigningKeyPass="$env:ANDROID_KEY_PASSWORD" `
             -p:AndroidSigningStorePass="$env:ANDROID_STORE_PASSWORD"
+          $apk = Get-ChildItem $publishPath -File -Filter '*-Signed.apk' | Select-Object -First 1
+          if ($null -eq $apk) {
+            throw "Expected a signed APK after the APK publish."
+          }
+          Copy-Item $apk.FullName "artifacts\MojiRecepti-$env:RELEASE_TAG.apk"
           dotnet publish $env:PROJECT_FILE `
             -f net10.0-android `
             -c Release `
@@ -106,18 +113,23 @@ jobs:
             -p:AndroidSigningKeyAlias="$env:ANDROID_KEY_ALIAS" `
             -p:AndroidSigningKeyPass="$env:ANDROID_KEY_PASSWORD" `
             -p:AndroidSigningStorePass="$env:ANDROID_STORE_PASSWORD"
-      - name: Collect Android packages
+          $aab = Get-ChildItem $publishPath -File -Filter '*-Signed.aab' | Select-Object -First 1
+          if ($null -eq $aab) {
+            throw "Expected a signed AAB after the AAB publish."
+          }
+          Copy-Item $aab.FullName "artifacts\MojiRecepti-$env:RELEASE_TAG.aab"
+      - name: Verify Android packages
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
-          $publishPath = "src\RecipeShopper.App\bin\Release\net10.0-android\publish"
-          $apk = Get-ChildItem $publishPath -File -Filter '*-Signed.apk' | Select-Object -First 1
-          $aab = Get-ChildItem $publishPath -File -Filter '*-Signed.aab' | Select-Object -First 1
-          if ($null -eq $apk -or $null -eq $aab) {
-            throw "Expected a signed APK and a signed AAB."
+          $expected = @(
+            "artifacts\MojiRecepti-$env:RELEASE_TAG.apk",
+            "artifacts\MojiRecepti-$env:RELEASE_TAG.aab"
+          )
+          foreach ($package in $expected) {
+            if (-not (Test-Path $package -PathType Leaf)) {
+              throw "Missing expected signed Android package: $package"
+            }
           }
-          Copy-Item $apk.FullName "artifacts\MojiRecepti-$env:RELEASE_TAG.apk"
-          Copy-Item $aab.FullName "artifacts\MojiRecepti-$env:RELEASE_TAG.aab"
       - uses: actions/upload-artifact@v4
         with:
           name: android-release

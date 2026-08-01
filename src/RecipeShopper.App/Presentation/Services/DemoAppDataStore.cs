@@ -138,15 +138,31 @@ public sealed class DemoAppDataStore : IAppDataStore
     public void AddRecipeToShoppingList(Guid recipeId, decimal multiplier, IEnumerable<Guid>? ingredientIds = null)
     {
         var recipe = FindRecipe(recipeId);
-        if (recipe is null || multiplier <= 0 || ActiveShoppingList.IsArchived)
+        if (recipe is null || multiplier <= 0)
         {
             return;
         }
 
+        var list = ActiveShoppingList;
+        if (list.IsArchived)
+        {
+            return;
+        }
+
+        AddRecipeContributions(list, recipe, multiplier, ingredientIds);
+        PersistShoppingList(list);
+    }
+
+    private static void AddRecipeContributions(
+        NamedShoppingList list,
+        RecipeItem recipe,
+        decimal multiplier,
+        IEnumerable<Guid>? ingredientIds = null)
+    {
         var selected = ingredientIds?.ToHashSet();
         foreach (var line in recipe.Ingredients.Where(x => selected is null || selected.Contains(x.IngredientId)))
         {
-            ActiveShoppingList.Contributions.Add(new ShoppingContribution
+            list.Contributions.Add(new ShoppingContribution
             {
                 IngredientId = line.IngredientId,
                 RecipeId = recipe.Id,
@@ -155,8 +171,6 @@ public sealed class DemoAppDataStore : IAppDataStore
                 Unit = line.Unit
             });
         }
-
-        PersistShoppingList(ActiveShoppingList);
     }
 
     public void AddManualShoppingItem(Guid ingredientId, decimal? amount, string unit, string note)
@@ -1166,8 +1180,8 @@ public sealed class DemoAppDataStore : IAppDataStore
         var list = new NamedShoppingList { Name = "Sedmična kupovina" };
         ShoppingLists.Add(list);
         activeShoppingListId = list.Id;
-        AddRecipeToShoppingList(pancakes.Id, 2m);
-        AddRecipeToShoppingList(soup.Id, 1m);
+        AddRecipeContributions(list, pancakes, 2m);
+        AddRecipeContributions(list, soup, 1m);
         list.SelectedOfferIds[flour.Id] = flour.Offers[1].Id;
         list.SelectedOfferIds[eggs.Id] = eggs.Offers[0].Id;
 

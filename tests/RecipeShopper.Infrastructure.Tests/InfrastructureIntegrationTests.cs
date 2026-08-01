@@ -1,5 +1,6 @@
 using System.Text.Json;
 using RecipeShopper.Application.Models.ImportExport;
+using RecipeShopper.App.Presentation.Services;
 using RecipeShopper.Domain.Entities;
 using RecipeShopper.Domain.Enums;
 using RecipeShopper.Domain.ValueObjects;
@@ -22,6 +23,52 @@ public sealed class InfrastructureIntegrationTests
         Assert.Equal(6, (await fixture.Catalog.GetPackageTypesAsync()).Count);
         Assert.Equal(4, (await fixture.MealPlan.GetSlotsAsync()).Count);
         Assert.Equal("BAM", (await new SettingsRepository(fixture.Database).GetAsync()).CurrencyCode);
+    }
+
+    [Fact]
+    public async Task Presentation_store_seeds_a_fresh_database_in_foreign_key_order()
+    {
+        await using var fixture = await DatabaseFixture.CreateAsync();
+        Assert.True(await fixture.Database.AreForeignKeysEnabledAsync());
+
+        var store = new DemoAppDataStore(
+            fixture.Recipes,
+            fixture.Ingredients,
+            fixture.Catalog,
+            fixture.Shopping,
+            fixture.MealPlan,
+            new SettingsRepository(fixture.Database));
+
+        Assert.Equal(10, store.Ingredients.Count);
+        Assert.Equal(4, store.Recipes.Count);
+        Assert.Equal(7, store.ActiveShoppingList.Contributions.Count);
+
+        var persistedIngredients = await fixture.Ingredients.GetAllAsync();
+        var persistedRecipes = await fixture.Recipes.GetAllAsync();
+        var persistedLists = await fixture.Shopping.GetAllAsync();
+        var persistedList = Assert.Single(persistedLists);
+        var persistedContributions = persistedList.Sources.SelectMany(source => source.Contributions).ToArray();
+
+        Assert.Equal(10, persistedIngredients.Count);
+        Assert.Equal(4, persistedRecipes.Count);
+        Assert.Equal(2, persistedList.Sources.Count);
+        Assert.Equal(7, persistedContributions.Length);
+        Assert.Equal(2, persistedList.Items.Count);
+        Assert.All(
+            persistedContributions,
+            contribution => Assert.Contains(persistedIngredients, ingredient => ingredient.Id == contribution.IngredientId));
+
+        var reloadedStore = new DemoAppDataStore(
+            fixture.Recipes,
+            fixture.Ingredients,
+            fixture.Catalog,
+            fixture.Shopping,
+            fixture.MealPlan,
+            new SettingsRepository(fixture.Database));
+
+        Assert.Equal(10, reloadedStore.Ingredients.Count);
+        Assert.Equal(4, reloadedStore.Recipes.Count);
+        Assert.Equal(7, reloadedStore.ActiveShoppingList.Contributions.Count);
     }
 
     [Fact]

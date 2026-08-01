@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
@@ -22,6 +23,12 @@
     <ProjectReference Include="..\..\src\RecipeShopper.Domain\RecipeShopper.Domain.csproj" />
     <ProjectReference Include="..\..\src\RecipeShopper.Application\RecipeShopper.Application.csproj" />
     <ProjectReference Include="..\..\src\RecipeShopper.Infrastructure\RecipeShopper.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\RecipeShopper.App\Presentation\Models\AppModels.cs" Link="App\AppModels.cs" />
+    <Compile Include="..\..\src\RecipeShopper.App\Presentation\Services\DemoAppDataStore.cs" Link="App\DemoAppDataStore.cs" />
+    <Compile Include="..\..\src\RecipeShopper.App\Presentation\Services\IAppDataStore.cs" Link="App\IAppDataStore.cs" />
   </ItemGroup>
 
 </Project>
