@@ -1,6 +1,6 @@
 # GitHub release signing
 
-The `Signed mobile release` workflow builds a signed Android APK, Android App Bundle, and iOS IPA, then attaches all three files to a GitHub Release.
+The `Personal mobile release` workflow builds a signed Android APK, Android App Bundle, and unsigned iOS device IPA, then attaches all three files to a GitHub Release. Sideloadly signs the IPA locally with a free Apple Account when installing it on an iPhone.
 
 ## Android repository secrets
 
@@ -17,27 +17,13 @@ Encode it on Windows:
 [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\secure\moji-recepti.keystore")) | Set-Clipboard
 ```
 
-## iOS repository secrets
+## iOS with Sideloadly
 
-- `IOS_CERTIFICATE_BASE64`: Base64-encoded Apple Distribution `.p12` certificate.
-- `IOS_CERTIFICATE_PASSWORD`: Export password of the `.p12` file.
-- `IOS_CODESIGN_KEY`: Full certificate identity, such as `Apple Distribution: Company Name (TEAMID)`.
-- `IOS_PROVISIONING_PROFILE_BASE64`: Base64-encoded App Store or Ad Hoc `.mobileprovision` file for `ba.mojirecepti.app`.
-- `IOS_PROVISIONING_PROFILE_NAME`: The profile name shown in the Apple Developer portal.
-- `IOS_KEYCHAIN_PASSWORD`: A strong temporary password used only for the CI keychain.
-
-Encode the certificate and profile on macOS:
-
-```bash
-base64 -i distribution.p12 | pbcopy
-base64 -i MojiRecepti.mobileprovision | pbcopy
-```
-
-The Apple certificate and provisioning profile must be current and must both belong to the same Apple Developer team.
+No iOS repository secrets or paid Apple Developer membership are required. Download `MojiRecepti-unsigned.ipa` from the GitHub Release, open it in Sideloadly on Windows, connect the iPhone, and use Apple ID sideload mode. With a free Apple Account, Apple requires the app to be refreshed every seven days. Sideloadly's automatic refresh can do this while the PC and iPhone can see each other over USB or Wi-Fi.
 
 ## Add secrets
 
-Open the private repository and go to **Settings > Secrets and variables > Actions > New repository secret**. Add every secret listed above. Secrets are never stored in this repository.
+Open the private repository and go to **Settings > Secrets and variables > Actions > New repository secret**. Add the four Android secrets listed above. Secrets are never stored in this repository.
 
 ## Create a release
 
@@ -48,6 +34,6 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Or run **Actions > Signed mobile release > Run workflow** and enter a new tag such as `v1.0.0`.
+Or run **Actions > Personal mobile release > Run workflow** and enter a new tag such as `v1.0.0`.
 
-The workflow tests the solution first. A release is published only after both signed platform builds succeed. Downloadable `.apk`, `.aab`, and `.ipa` files then appear under the release.
+The workflow tests the solution first. A release is published only after both platform builds succeed. Downloadable `.apk`, `.aab`, and Sideloadly-ready `.ipa` files then appear under the release.

@@ -30,7 +30,7 @@ iOS compilation and signing require a macOS runner with compatible Xcode and sig
 
 ## Releases
 
-GitHub Actions can create signed Android APK/AAB and iOS IPA packages and attach them to a GitHub Release. Configure the required repository secrets using [the signing guide](docs/github-release-signing.md), then push a `v*` tag or run the release workflow manually.
+GitHub Actions creates signed Android APK/AAB packages and an unsigned iOS device IPA for Sideloadly, then attaches them to a GitHub Release. Configure the Android repository secrets using [the signing guide](docs/github-release-signing.md), then push a `v*` tag or run the release workflow manually.
 
 ## Product defaults
 

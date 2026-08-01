@@ -1,4 +1,4 @@
-name: Signed mobile release
+name: Personal mobile release
 
 on:
   push:
@@ -110,16 +110,9 @@ jobs:
           if-no-files-found: error
 
   ios:
-    name: iOS IPA
+    name: iOS IPA for Sideloadly
     needs: test
     runs-on: macos-15
-    env:
-      IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
-      IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-      IOS_CODESIGN_KEY: ${{ secrets.IOS_CODESIGN_KEY }}
-      IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
-      IOS_PROVISIONING_PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
-      KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
@@ -127,39 +120,7 @@ jobs:
           dotnet-version: 10.0.x
       - name: Install MAUI iOS workload
         run: dotnet workload install maui-ios
-      - name: Validate iOS signing secrets
-        shell: bash
-        run: |
-          required=(
-            IOS_CERTIFICATE_BASE64 IOS_CERTIFICATE_PASSWORD IOS_CODESIGN_KEY
-            IOS_PROVISIONING_PROFILE_BASE64 IOS_PROVISIONING_PROFILE_NAME KEYCHAIN_PASSWORD
-          )
-          for name in "${required[@]}"; do
-            if [[ -z "${!name}" ]]; then
-              echo "Missing secret: $name" >&2
-              exit 1
-            fi
-          done
-      - name: Install Apple certificate and provisioning profile
-        shell: bash
-        run: |
-          CERTIFICATE_PATH="$RUNNER_TEMP/distribution.p12"
-          PROFILE_PATH="$RUNNER_TEMP/profile.mobileprovision"
-          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
-
-          echo -n "$IOS_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
-          echo -n "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
-
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security import "$CERTIFICATE_PATH" -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security list-keychain -d user -s "$KEYCHAIN_PATH" login.keychain-db
-
-          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-          cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/release.mobileprovision"
-      - name: Publish signed IPA
+      - name: Publish unsigned iOS device app
         shell: bash
         run: |
           RELEASE_VERSION="${RELEASE_TAG#v}"
@@ -170,19 +131,25 @@ jobs:
             -p:ApplicationDisplayVersion="$RELEASE_VERSION" \
             -p:ApplicationVersion="$GITHUB_RUN_NUMBER" \
             -p:RuntimeIdentifier=ios-arm64 \
-            -p:ArchiveOnBuild=true \
-            -p:BuildIpa=true \
-            -p:CodesignKey="$IOS_CODESIGN_KEY" \
-            -p:CodesignProvision="$IOS_PROVISIONING_PROFILE_NAME"
-      - name: Collect IPA
+            -p:ArchiveOnBuild=false \
+            -p:EnableCodeSigning=false \
+            -p:CodesignRequireProvisioningProfile=false
+      - name: Package IPA for Sideloadly
         shell: bash
         run: |
           mkdir -p artifacts
-          find src/RecipeShopper.App/bin/Release/net10.0-ios -type f -name '*.ipa' -exec cp {} artifacts/ \;
-          test -n "$(find artifacts -maxdepth 1 -type f -name '*.ipa' -print -quit)"
+          APP_PATH="$(find src/RecipeShopper.App/bin/Release/net10.0-ios -type d -name '*.app' -print -quit)"
+          if [[ -z "$APP_PATH" ]]; then
+            echo "The iOS device app bundle was not produced." >&2
+            exit 1
+          fi
+          mkdir -p ipa/Payload
+          cp -R "$APP_PATH" ipa/Payload/
+          ditto -c -k --sequesterRsrc --keepParent ipa/Payload artifacts/MojiRecepti-unsigned.ipa
+          test -s artifacts/MojiRecepti-unsigned.ipa
       - uses: actions/upload-artifact@v4
         with:
-          name: ios-release
+          name: ios-sideload-release
           path: artifacts/*.ipa
           if-no-files-found: error
 
