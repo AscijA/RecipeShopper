@@ -1,6 +1,7 @@
 using RecipeShopper.Application.Abstractions.Platform;
 
 #if IOS
+using Foundation;
 using UserNotifications;
 #endif
 
