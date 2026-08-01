@@ -9,7 +9,7 @@ jobs:
   test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
@@ -25,23 +25,23 @@ jobs:
   android:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
       - name: Install Android workload
-        run: dotnet workload install android
+        run: dotnet workload install maui-android
       - name: Build Android
-        run: dotnet build src/RecipeShopper.App/RecipeShopper.App.csproj -f net10.0-android --configuration Release
+        run: dotnet build src/RecipeShopper.App/RecipeShopper.App.csproj -f net10.0-android --configuration Release -p:TargetFrameworks=net10.0-android
 
   ios-compile:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
       - name: Install iOS workload
-        run: dotnet workload install ios
+        run: dotnet workload install maui-ios
       - name: Compile iOS simulator
-        run: dotnet build src/RecipeShopper.App/RecipeShopper.App.csproj -f net10.0-ios --configuration Release -p:RuntimeIdentifier=iossimulator-arm64
+        run: dotnet build src/RecipeShopper.App/RecipeShopper.App.csproj -f net10.0-ios --configuration Release -p:TargetFrameworks=net10.0-ios -p:RuntimeIdentifier=iossimulator-arm64
