@@ -87,7 +87,20 @@ jobs:
             -p:RecipeShopperTargetFrameworks=net10.0-android `
             -p:ApplicationDisplayVersion="$releaseVersion" `
             -p:ApplicationVersion="$env:GITHUB_RUN_NUMBER" `
-            -p:AndroidPackageFormats=apk%3Baab `
+            -p:AndroidPackageFormats=apk `
+            -p:AndroidKeyStore=true `
+            -p:AndroidSigningKeyStore="$env:RUNNER_TEMP\signing\release.keystore" `
+            -p:AndroidSigningKeyAlias="$env:ANDROID_KEY_ALIAS" `
+            -p:AndroidSigningKeyPass="$env:ANDROID_KEY_PASSWORD" `
+            -p:AndroidSigningStorePass="$env:ANDROID_STORE_PASSWORD"
+          dotnet publish $env:PROJECT_FILE `
+            -f net10.0-android `
+            -c Release `
+            --no-restore `
+            -p:RecipeShopperTargetFrameworks=net10.0-android `
+            -p:ApplicationDisplayVersion="$releaseVersion" `
+            -p:ApplicationVersion="$env:GITHUB_RUN_NUMBER" `
+            -p:AndroidPackageFormats=aab `
             -p:AndroidKeyStore=true `
             -p:AndroidSigningKeyStore="$env:RUNNER_TEMP\signing\release.keystore" `
             -p:AndroidSigningKeyAlias="$env:ANDROID_KEY_ALIAS" `
@@ -97,12 +110,14 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path artifacts | Out-Null
-          Get-ChildItem "src\RecipeShopper.App\bin\Release\net10.0-android\publish" -File |
-            Where-Object Extension -In '.apk', '.aab' |
-            Copy-Item -Destination artifacts
-          if ((Get-ChildItem artifacts -File).Count -lt 2) {
-            throw "Expected both a signed APK and AAB."
+          $publishPath = "src\RecipeShopper.App\bin\Release\net10.0-android\publish"
+          $apk = Get-ChildItem $publishPath -File -Filter '*-Signed.apk' | Select-Object -First 1
+          $aab = Get-ChildItem $publishPath -File -Filter '*-Signed.aab' | Select-Object -First 1
+          if ($null -eq $apk -or $null -eq $aab) {
+            throw "Expected a signed APK and a signed AAB."
           }
+          Copy-Item $apk.FullName "artifacts\MojiRecepti-$env:RELEASE_TAG.apk"
+          Copy-Item $aab.FullName "artifacts\MojiRecepti-$env:RELEASE_TAG.aab"
       - uses: actions/upload-artifact@v4
         with:
           name: android-release
@@ -166,10 +181,14 @@ jobs:
           pattern: "*-release"
           path: release-files
           merge-multiple: true
-      - name: Create release and upload packages
+      - name: Create or update release and upload packages
         shell: bash
         run: |
-          gh release create "$RELEASE_TAG" release-files/* \
-            --target "$GITHUB_SHA" \
-            --title "Moji Recepti $RELEASE_TAG" \
-            --generate-notes
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release-files/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release-files/* \
+              --target "$GITHUB_SHA" \
+              --title "Moji Recepti $RELEASE_TAG" \
+              --generate-notes
+          fi
