@@ -35,6 +35,31 @@
             </Grid>
             <Border><Grid ColumnDefinitions="*,*"><Label Text="Valuta" VerticalOptions="Center" /><Picker Grid.Column="1" ItemsSource="{Binding CurrencyOptions}" SelectedItem="{Binding Currency}" /></Grid></Border>
 
+            <Label Style="{StaticResource SectionTitle}" Text="Zajednički prostor" />
+            <Border IsVisible="{Binding IsWorkspaceConnected}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Style="{StaticResource Caption}" Text="Svi uređaji sa ovim kodom vide iste podatke." />
+                    <Label FontAttributes="Bold" FontSize="24" HorizontalTextAlignment="Center" Text="{Binding ShareCode}" />
+                    <Label HorizontalTextAlignment="Center" Style="{StaticResource Caption}" Text="{Binding SyncStatusText}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Command="{Binding ShareWorkspaceCodeCommand}" Style="{StaticResource SecondaryButton}" Text="Podijeli kod" />
+                        <Button Grid.Column="1" Command="{Binding SyncNowCommand}" Text="Sinhronizuj" />
+                    </Grid>
+                    <Button Command="{Binding LeaveWorkspaceCommand}" Style="{StaticResource DangerButton}" Text="Napusti prostor" />
+                </VerticalStackLayout>
+            </Border>
+            <Border IsVisible="{Binding IsWorkspaceConnected, Converter={StaticResource InverseBoolConverter}}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Style="{StaticResource Caption}" Text="Kreirajte novi prostor ili unesite kod koji ste dobili." />
+                    <Entry MaxLength="9" Placeholder="ABCD-1234" Text="{Binding ShareCodeInput}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Command="{Binding CreateWorkspaceCommand}" IsEnabled="{Binding IsSyncConfigured}" Style="{StaticResource SecondaryButton}" Text="Kreiraj" />
+                        <Button Grid.Column="1" Command="{Binding JoinWorkspaceCommand}" IsEnabled="{Binding IsSyncConfigured}" Text="Pridruži se" />
+                    </Grid>
+                    <Label HorizontalTextAlignment="Center" Style="{StaticResource Caption}" Text="{Binding SyncStatusText}" />
+                </VerticalStackLayout>
+            </Border>
+
             <Label Style="{StaticResource SectionTitle}" Text="Podaci" />
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                 <Button Command="{Binding ImportCommand}" Style="{StaticResource SecondaryButton}" Text="Uvezi JSON" />

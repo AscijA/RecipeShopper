@@ -4,6 +4,8 @@ using RecipeShopper.App.Presentation.ViewModels;
 using RecipeShopper.App.Presentation.Views;
 using RecipeShopper.Application.Abstractions.Platform;
 using RecipeShopper.Infrastructure;
+using RecipeShopper.Infrastructure.Sync;
+using System.Reflection;
 
 namespace RecipeShopper.App;
 
@@ -29,7 +31,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<IDialogService, MauiDialogService>();
         builder.Services.AddRecipeShopperInfrastructure(
             Path.Combine(FileSystem.AppDataDirectory, "recipe-shopper.db3"),
-            Path.Combine(FileSystem.AppDataDirectory, "images"));
+            Path.Combine(FileSystem.AppDataDirectory, "images"),
+            new SupabaseSyncOptions(
+                ConfigurationValue("RecipeShopperSupabaseUrl", "RECIPE_SHOPPER_SUPABASE_URL"),
+                ConfigurationValue("RecipeShopperSupabaseAnonKey", "RECIPE_SHOPPER_SUPABASE_ANON_KEY")));
 
         builder.Services.AddSingleton<RecipesViewModel>();
         builder.Services.AddSingleton<ShoppingViewModel>();
@@ -59,4 +64,10 @@ public static class MauiProgram
 #endif
         return builder.Build();
     }
+
+    private static string ConfigurationValue(string metadataKey, string environmentKey) =>
+        Environment.GetEnvironmentVariable(environmentKey)
+        ?? typeof(MauiProgram).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+            .FirstOrDefault(value => value.Key == metadataKey)?.Value
+        ?? string.Empty;
 }

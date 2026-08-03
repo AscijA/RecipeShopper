@@ -5,6 +5,7 @@ using RecipeShopper.App.Presentation.Models;
 using RecipeShopper.App.Presentation.Services;
 using RecipeShopper.Application.Abstractions.ImportExport;
 using RecipeShopper.Application.Abstractions.Platform;
+using RecipeShopper.Application.Abstractions.Sync;
 using ImportConflictResolution = RecipeShopper.Domain.Enums.ImportConflictResolution;
 using ImportMode = RecipeShopper.Domain.Enums.ImportMode;
 
@@ -18,6 +19,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
     private readonly IShareService share;
     private readonly IImportExportService importExport;
     private readonly IDialogService dialogs;
+    private readonly IWorkspaceSyncService sync;
     private bool loading;
 
     [ObservableProperty] private string selectedAppearance = "Sistem";
@@ -30,6 +32,11 @@ public sealed partial class SettingsViewModel : BaseViewModel
     [ObservableProperty] private bool reminderEnabled;
     [ObservableProperty] private TimeSpan reminderTime;
     [ObservableProperty] private string currency = "BAM";
+    [ObservableProperty] private string shareCodeInput = string.Empty;
+    [ObservableProperty] private string shareCode = string.Empty;
+    [ObservableProperty] private string syncStatusText = "Nije povezano";
+    [ObservableProperty] private bool isWorkspaceConnected;
+    [ObservableProperty] private bool isSyncConfigured;
 
     public IReadOnlyList<string> AppearanceOptions { get; } = ["Sistem", "Svijetla", "Tamna"];
     public IReadOnlyList<string> AccentOptions { get; } = ["Zelena", "Narandžasta", "Plava"];
@@ -43,7 +50,8 @@ public sealed partial class SettingsViewModel : BaseViewModel
         IFilePickerService files,
         IShareService share,
         IImportExportService importExport,
-        IDialogService dialogs)
+        IDialogService dialogs,
+        IWorkspaceSyncService sync)
     {
         this.store = store;
         this.reminders = reminders;
@@ -51,8 +59,62 @@ public sealed partial class SettingsViewModel : BaseViewModel
         this.share = share;
         this.importExport = importExport;
         this.dialogs = dialogs;
+        this.sync = sync;
+        sync.StatusChanged += OnSyncStatusChanged;
         Title = "Postavke";
         Load();
+    }
+
+    [RelayCommand]
+    private async Task CreateWorkspaceAsync()
+    {
+        try
+        {
+            var code = await sync.CreateWorkspaceAsync();
+            UpdateSyncStatus(sync.Status);
+            await share.ShareTextAsync("Kod zajedničkog prostora", $"Pridruži se mom prostoru u aplikaciji Moji Recepti. Kod: {code}");
+        }
+        catch (Exception exception) { await dialogs.AlertAsync("Povezivanje nije uspjelo", exception.Message); }
+    }
+
+    [RelayCommand]
+    private async Task JoinWorkspaceAsync()
+    {
+        if (string.IsNullOrWhiteSpace(ShareCodeInput)) return;
+        try
+        {
+            await sync.JoinWorkspaceAsync(ShareCodeInput);
+            store.ReloadPersistentState();
+            Load();
+            UpdateSyncStatus(sync.Status);
+        }
+        catch (Exception exception) { await dialogs.AlertAsync("Kod nije prihvaćen", exception.Message); }
+    }
+
+    [RelayCommand]
+    private Task ShareWorkspaceCodeAsync() => share.ShareTextAsync(
+        "Kod zajedničkog prostora",
+        $"Pridruži se mom prostoru u aplikaciji Moji Recepti. Kod: {ShareCode}");
+
+    [RelayCommand]
+    private async Task SyncNowAsync()
+    {
+        try
+        {
+            await sync.SyncAsync();
+            store.ReloadPersistentState();
+            Load();
+            UpdateSyncStatus(sync.Status);
+        }
+        catch (Exception exception) { await dialogs.AlertAsync("Sinhronizacija nije uspjela", exception.Message); }
+    }
+
+    [RelayCommand]
+    private async Task LeaveWorkspaceAsync()
+    {
+        if (!await dialogs.ConfirmAsync("Napustiti zajednički prostor?", "Lokalni podaci ostaju na ovom uređaju.", "Napusti")) return;
+        await sync.LeaveWorkspaceAsync();
+        UpdateSyncStatus(sync.Status);
     }
 
     partial void OnSelectedAppearanceChanged(string value)
@@ -210,9 +272,29 @@ public sealed partial class SettingsViewModel : BaseViewModel
         ReminderEnabled = store.Settings.ReminderEnabled;
         ReminderTime = store.Settings.ReminderTime;
         Currency = store.Settings.Currency;
+        UpdateSyncStatus(sync.Status);
         loading = false;
         ApplyAppearance();
         ApplyAccent();
+    }
+
+    private void OnSyncStatusChanged(object? sender, SyncStatus value) =>
+        MainThread.BeginInvokeOnMainThread(() => UpdateSyncStatus(value));
+
+    private void UpdateSyncStatus(SyncStatus value)
+    {
+        ShareCode = value.ShareCode ?? string.Empty;
+        IsWorkspaceConnected = value.IsConnected;
+        IsSyncConfigured = value.State != SyncConnectionState.NotConfigured;
+        SyncStatusText = value.State switch
+        {
+            SyncConnectionState.NotConfigured => "Supabase nije konfigurisan",
+            SyncConnectionState.Disconnected => "Nije povezano",
+            SyncConnectionState.Syncing => "Sinhronizacija…",
+            SyncConnectionState.Synced => value.LastSyncedAt is null ? "Sinhronizovano" : $"Sinhronizovano {value.LastSyncedAt.Value.ToLocalTime():g}",
+            SyncConnectionState.Offline => value.Message ?? "Offline — promjene su sačuvane lokalno",
+            _ => value.Message ?? "Sinhronizacija nije uspjela"
+        };
     }
 
     private void ApplyAppearance()

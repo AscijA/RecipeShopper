@@ -35,6 +35,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<AssemblyMetadata Include="RecipeShopperSupabaseUrl" Value="$(RecipeShopperSupabaseUrl)" />
+		<AssemblyMetadata Include="RecipeShopperSupabaseAnonKey" Value="$(RecipeShopperSupabaseAnonKey)" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#2F6B4F" />
 

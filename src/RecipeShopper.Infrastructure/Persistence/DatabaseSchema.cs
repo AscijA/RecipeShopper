@@ -4,7 +4,7 @@ namespace RecipeShopper.Infrastructure.Persistence;
 
 internal static class DatabaseSchema
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     private static readonly string[] CreateStatements =
     [
@@ -259,6 +259,29 @@ internal static class DatabaseSchema
 
             Seed(connection);
             connection.Execute("PRAGMA user_version = 1");
+        }
+
+        if (fromVersion < 2)
+        {
+            connection.Execute(
+                """
+                CREATE TABLE sync_workspace (
+                    Id INTEGER NOT NULL PRIMARY KEY CHECK (Id = 1),
+                    WorkspaceId TEXT NOT NULL,
+                    ShareCode TEXT NOT NULL,
+                    DeviceId TEXT NOT NULL,
+                    Revision INTEGER NOT NULL,
+                    LastSyncedUtc TEXT NULL
+                )
+                """);
+            connection.Execute(
+                """
+                CREATE TABLE sync_outbox (
+                    Id TEXT NOT NULL PRIMARY KEY,
+                    CreatedUtc TEXT NOT NULL
+                )
+                """);
+            connection.Execute("PRAGMA user_version = 2");
         }
     }
 

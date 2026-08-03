@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using RecipeShopper.App.Presentation.Models;
 using RecipeShopper.Application.Abstractions.Persistence;
+using RecipeShopper.Application.Abstractions.Sync;
 using RecipeShopper.Domain.ValueObjects;
 using DomainEntities = RecipeShopper.Domain.Entities;
 using DomainEnums = RecipeShopper.Domain.Enums;
@@ -24,6 +25,8 @@ public sealed class DemoAppDataStore : IAppDataStore
     private readonly IShoppingListRepository shoppingListRepository;
     private readonly IMealPlanRepository mealPlanRepository;
     private readonly ISettingsRepository settingsRepository;
+    private readonly IWorkspaceSyncService? syncService;
+    private bool trackChanges;
     private readonly Dictionary<string, Guid> packageTypeIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<Guid, Guid> offerPackageIds = [];
     private readonly Dictionary<Guid, Guid> offerStoreIds = [];
@@ -64,6 +67,18 @@ public sealed class DemoAppDataStore : IAppDataStore
         IShoppingListRepository shoppingListRepository,
         IMealPlanRepository mealPlanRepository,
         ISettingsRepository settingsRepository)
+        : this(recipeRepository, ingredientRepository, catalogRepository, shoppingListRepository, mealPlanRepository, settingsRepository, null)
+    {
+    }
+
+    public DemoAppDataStore(
+        IRecipeRepository recipeRepository,
+        IIngredientRepository ingredientRepository,
+        ICatalogRepository catalogRepository,
+        IShoppingListRepository shoppingListRepository,
+        IMealPlanRepository mealPlanRepository,
+        ISettingsRepository settingsRepository,
+        IWorkspaceSyncService? syncService)
     {
         this.recipeRepository = recipeRepository;
         this.ingredientRepository = ingredientRepository;
@@ -71,6 +86,7 @@ public sealed class DemoAppDataStore : IAppDataStore
         this.shoppingListRepository = shoppingListRepository;
         this.mealPlanRepository = mealPlanRepository;
         this.settingsRepository = settingsRepository;
+        this.syncService = syncService;
 
         if (!LoadPersistentState())
         {
@@ -78,6 +94,7 @@ public sealed class DemoAppDataStore : IAppDataStore
             PersistAll();
         }
 
+        trackChanges = true;
         Settings.PropertyChanged += (_, _) => PersistSettings();
     }
 
@@ -101,6 +118,7 @@ public sealed class DemoAppDataStore : IAppDataStore
         {
             Recipes.Remove(recipe);
             recipeRepository.ArchiveAsync(id).GetAwaiter().GetResult();
+            TrackChange();
         }
     }
 
@@ -121,6 +139,7 @@ public sealed class DemoAppDataStore : IAppDataStore
         {
             ingredient.IsArchived = true;
             ingredientRepository.ArchiveAsync(id).GetAwaiter().GetResult();
+            TrackChange();
         }
     }
 
@@ -133,6 +152,7 @@ public sealed class DemoAppDataStore : IAppDataStore
             IsEnabled = store.IsEnabled,
             SortOrder = Stores.IndexOf(store)
         }).GetAwaiter().GetResult();
+        TrackChange();
     }
 
     public void AddRecipeToShoppingList(Guid recipeId, decimal multiplier, IEnumerable<Guid>? ingredientIds = null)
@@ -333,6 +353,7 @@ public sealed class DemoAppDataStore : IAppDataStore
             return;
         }
         shoppingListRepository.DeleteAsync(id).GetAwaiter().GetResult();
+        TrackChange();
         ShoppingLists.Remove(list);
         if (ActiveShoppingListId == id)
         {
@@ -835,6 +856,7 @@ public sealed class DemoAppDataStore : IAppDataStore
             }).ToList()
         };
         recipeRepository.UpsertAsync(recipe).GetAwaiter().GetResult();
+        TrackChange();
     }
 
     private void PersistIngredient(IngredientItem item)
@@ -879,6 +901,7 @@ public sealed class DemoAppDataStore : IAppDataStore
             });
         }
         ingredientRepository.UpsertAsync(ingredient).GetAwaiter().GetResult();
+        TrackChange();
     }
 
     private void PersistShoppingList(NamedShoppingList item)
@@ -943,6 +966,7 @@ public sealed class DemoAppDataStore : IAppDataStore
             list.Items.Add(state);
         }
         shoppingListRepository.UpsertAsync(list).GetAwaiter().GetResult();
+        TrackChange();
     }
 
     private void PersistPlanner()
@@ -970,6 +994,7 @@ public sealed class DemoAppDataStore : IAppDataStore
         }
         PersistWeek(WeekA, DomainEnums.AlternatingWeek.A, slotsByName);
         PersistWeek(WeekB, DomainEnums.AlternatingWeek.B, slotsByName);
+        TrackChange();
     }
 
     private void PersistWeek(IEnumerable<DayMealPlan> days, DomainEnums.AlternatingWeek week, IReadOnlyDictionary<string, Guid> slots)
@@ -1020,6 +1045,12 @@ public sealed class DemoAppDataStore : IAppDataStore
             DailyReminderTime = TimeOnly.FromTimeSpan(Settings.ReminderTime),
             CurrencyCode = Settings.Currency
         }).GetAwaiter().GetResult();
+        TrackChange();
+    }
+
+    private void TrackChange()
+    {
+        if (trackChanges) syncService?.MarkLocalChange();
     }
 
     private void EnsurePackageTypes()

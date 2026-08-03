@@ -7,7 +7,7 @@ Offline-first recipe, meal-planning, ingredient catalogue, and shopping-list app
 - .NET 10 and .NET MAUI 10
 - XAML and CommunityToolkit.Mvvm
 - SQLite local persistence
-- No backend, account, analytics, or required network connection
+- SQLite-first offline operation with optional Supabase workspace synchronization
 
 ## Projects
 
@@ -41,3 +41,15 @@ GitHub Actions creates signed Android APK/AAB packages and an unsigned iOS devic
 - Local JSON import/export and named shopping lists
 
 The UI is backed by the normalized local repositories. Recipe, ingredient, shopping-list, planner, and settings changes are written to the app-private SQLite database. Import/export supports previewed merge or complete replacement, with per-conflict resolution.
+
+## Optional Supabase sync
+
+Run [`docs/supabase-sync.sql`](docs/supabase-sync.sql) in a Supabase project, then provide these values when launching/building the app:
+
+```powershell
+dotnet build src/RecipeShopper.App/RecipeShopper.App.csproj -f net10.0-android `
+  -p:RecipeShopperSupabaseUrl='https://PROJECT.supabase.co' `
+  -p:RecipeShopperSupabaseAnonKey='YOUR_PUBLIC_ANON_KEY'
+```
+
+Without these values the app remains completely local and the shared-space controls explain that sync is not configured. Local writes are always committed to SQLite first and recorded in a durable outbox; activation or the **Sinhronizuj** action pushes them when connectivity returns.
