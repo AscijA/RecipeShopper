@@ -1,5 +1,3 @@
--- Run once in the Supabase SQL editor. The app uses the anon key; share codes are
--- capabilities and only their SHA-256 hashes are stored.
 create extension if not exists pgcrypto;
 
 create table if not exists public.recipe_shopper_workspaces (
