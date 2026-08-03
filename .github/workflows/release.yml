@@ -22,6 +22,8 @@ env:
   PROJECT_FILE: src/RecipeShopper.App/RecipeShopper.App.csproj
   DOTNET_NOLOGO: true
   RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  RECIPE_SHOPPER_SUPABASE_URL: ${{ secrets.RECIPE_SHOPPER_SUPABASE_URL }}
+  RECIPE_SHOPPER_SUPABASE_ANON_KEY: ${{ secrets.RECIPE_SHOPPER_SUPABASE_ANON_KEY }}
 
 jobs:
   test:
@@ -89,6 +91,8 @@ jobs:
             -p:RecipeShopperTargetFrameworks=net10.0-android `
             -p:ApplicationDisplayVersion="$releaseVersion" `
             -p:ApplicationVersion="$env:GITHUB_RUN_NUMBER" `
+            -p:RecipeShopperSupabaseUrl="$env:RECIPE_SHOPPER_SUPABASE_URL" `
+            -p:RecipeShopperSupabaseAnonKey="$env:RECIPE_SHOPPER_SUPABASE_ANON_KEY" `
             -p:AndroidPackageFormats=apk `
             -p:AndroidKeyStore=true `
             -p:AndroidSigningKeyStore="$env:RUNNER_TEMP\signing\release.keystore" `
@@ -107,6 +111,8 @@ jobs:
             -p:RecipeShopperTargetFrameworks=net10.0-android `
             -p:ApplicationDisplayVersion="$releaseVersion" `
             -p:ApplicationVersion="$env:GITHUB_RUN_NUMBER" `
+            -p:RecipeShopperSupabaseUrl="$env:RECIPE_SHOPPER_SUPABASE_URL" `
+            -p:RecipeShopperSupabaseAnonKey="$env:RECIPE_SHOPPER_SUPABASE_ANON_KEY" `
             -p:AndroidPackageFormats=aab `
             -p:AndroidKeyStore=true `
             -p:AndroidSigningKeyStore="$env:RUNNER_TEMP\signing\release.keystore" `
@@ -157,6 +163,8 @@ jobs:
             -p:RecipeShopperTargetFrameworks=net10.0-ios \
             -p:ApplicationDisplayVersion="$RELEASE_VERSION" \
             -p:ApplicationVersion="$GITHUB_RUN_NUMBER" \
+            -p:RecipeShopperSupabaseUrl="$RECIPE_SHOPPER_SUPABASE_URL" \
+            -p:RecipeShopperSupabaseAnonKey="$RECIPE_SHOPPER_SUPABASE_ANON_KEY" \
             -p:RuntimeIdentifier=ios-arm64 \
             -p:ArchiveOnBuild=false \
             -p:EnableCodeSigning=false \
