@@ -32,7 +32,8 @@ public sealed class MauiNavigationService : INavigationService
         cancellationToken.ThrowIfCancellationRequested();
 #if IOS
         Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
-            UIKit.UIApplication.SharedApplication.KeyWindow?.EndEditing(true));
+            UIKit.UIApplication.SharedApplication.SendAction(
+                new ObjCRuntime.Selector("resignFirstResponder"), null, null, null));
 #endif
 #if ANDROID
         Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
