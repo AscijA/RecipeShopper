@@ -74,6 +74,7 @@ public sealed partial class IngredientItem : ObservableObject
 
     [ObservableProperty] private string name = string.Empty;
     [ObservableProperty] private string icon = "🥣";
+    [ObservableProperty] private string? imagePath;
     [ObservableProperty] private MeasurementFamily measurementFamily;
     [ObservableProperty] private string baseUnit = "g";
     [ObservableProperty] private bool isArchived;
@@ -81,9 +82,18 @@ public sealed partial class IngredientItem : ObservableObject
     public ObservableCollection<PackageOfferItem> Offers { get; } = [];
     public string MeasurementDescription => $"{FamilyLabel(MeasurementFamily)} · {BaseUnit}";
     public string OfferSummary => Offers.Count == 0 ? "Cijene nisu unesene" : $"{Offers.Count} ponuda";
+    public bool HasImage => !string.IsNullOrWhiteSpace(ImagePath);
+    public string ImagePreviewPath => HasImage
+        ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ImagePath!.Replace('/', Path.DirectorySeparatorChar))
+        : string.Empty;
 
     partial void OnMeasurementFamilyChanged(MeasurementFamily value) => OnPropertyChanged(nameof(MeasurementDescription));
     partial void OnBaseUnitChanged(string value) => OnPropertyChanged(nameof(MeasurementDescription));
+    partial void OnImagePathChanged(string? value)
+    {
+        OnPropertyChanged(nameof(HasImage));
+        OnPropertyChanged(nameof(ImagePreviewPath));
+    }
 
     private static string FamilyLabel(MeasurementFamily family) => family switch
     {

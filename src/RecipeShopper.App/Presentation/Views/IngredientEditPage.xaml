@@ -15,6 +15,11 @@
                 <Border Padding="8,0"><Entry FontSize="24" HorizontalTextAlignment="Center" MaxLength="4" Placeholder="🥣" Text="{Binding Icon}" /></Border>
                 <Border Grid.Column="1" Padding="8,0"><Entry Placeholder="Naziv" Text="{Binding Name}" /></Border>
             </Grid>
+            <Image Aspect="AspectFill" HeightRequest="150" IsVisible="{Binding HasImage}" Source="{Binding ImagePreviewPath}" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button Command="{Binding PickImageCommand}" Style="{StaticResource SecondaryButton}" Text="Odaberi sliku" />
+                <Button Grid.Column="1" Command="{Binding RemoveImageCommand}" IsVisible="{Binding HasImage}" Style="{StaticResource GhostButton}" Text="Ukloni sliku" />
+            </Grid>
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                 <Border Padding="8,0"><Picker ItemsSource="{Binding Families}" SelectedItem="{Binding SelectedFamily}" Title="Mjerenje" /></Border>
                 <Border Grid.Column="1" Padding="8,0"><Picker ItemsSource="{Binding Units}" SelectedItem="{Binding BaseUnit}" Title="Osnovna jedinica" /></Border>

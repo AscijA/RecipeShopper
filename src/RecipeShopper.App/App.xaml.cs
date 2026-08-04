@@ -16,6 +16,12 @@ public partial class App : Microsoft.Maui.Controls.Application
         this.shell = shell;
         this.sync = sync;
         this.store = store;
+        UserAppTheme = store.Settings.Appearance switch
+        {
+            Presentation.Models.AppAppearance.Light => AppTheme.Light,
+            Presentation.Models.AppAppearance.Dark => AppTheme.Dark,
+            _ => AppTheme.Unspecified
+        };
     }
 
     protected override Window CreateWindow(IActivationState? activationState)

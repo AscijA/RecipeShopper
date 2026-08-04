@@ -35,6 +35,7 @@ internal static class TransferMapper
         Id = value.Id.ToString("D"),
         Name = value.Name,
         IconKey = value.IconKey,
+        ImagePath = metadata ? value.ImagePath : null,
         MeasurementFamily = value.MeasurementFamily.ToString(),
         BaseUnit = value.BaseUnit.Value,
         Packages = value.Packages.Select(package => ToDto(package, metadata)).ToList(),
@@ -212,6 +213,7 @@ internal static class TransferMapper
         Id = id,
         Name = value.Name.Trim(),
         IconKey = value.IconKey,
+        ImagePath = value.ImagePath,
         MeasurementFamily = Enum.Parse<MeasurementFamily>(value.MeasurementFamily, true),
         BaseUnit = new UnitCode(value.BaseUnit)
     }, local);

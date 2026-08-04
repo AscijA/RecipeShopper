@@ -31,6 +31,7 @@ internal sealed class IngredientRow : EntityRow
 
     public string Name { get; set; } = string.Empty;
     public string? IconKey { get; set; }
+    public string? ImagePath { get; set; }
     public string MeasurementFamily { get; set; } = string.Empty;
     public string BaseUnit { get; set; } = string.Empty;
 }

@@ -33,6 +33,7 @@ public sealed class Ingredient : Entity
 {
     public string Name { get; set; } = string.Empty;
     public string? IconKey { get; set; }
+    public string? ImagePath { get; set; }
     public MeasurementFamily MeasurementFamily { get; set; }
     public UnitCode BaseUnit { get; set; } = UnitCode.Gram;
     public List<PackageDefinition> Packages { get; set; } = [];

@@ -6,6 +6,12 @@ using RecipeShopper.Application.Abstractions.Platform;
 using RecipeShopper.Infrastructure;
 using RecipeShopper.Infrastructure.Sync;
 using System.Reflection;
+#if IOS
+using UIKit;
+#endif
+#if ANDROID
+using Android.Graphics.Drawables;
+#endif
 
 namespace RecipeShopper.App;
 
@@ -21,6 +27,25 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
+
+#if IOS
+        Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("BorderlessEntry", (handler, _) =>
+            handler.PlatformView.BorderStyle = UITextBorderStyle.None);
+        Microsoft.Maui.Handlers.EditorHandler.Mapper.AppendToMapping("BorderlessEditor", (handler, _) =>
+        {
+            handler.PlatformView.Layer.BorderWidth = 0;
+            handler.PlatformView.BackgroundColor = UIColor.Clear;
+        });
+#endif
+#if ANDROID
+        Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("BorderlessEntry", (handler, _) =>
+        {
+            handler.PlatformView.Background = new ColorDrawable(Android.Graphics.Color.Transparent);
+            handler.PlatformView.SetPadding(0, handler.PlatformView.PaddingTop, 0, handler.PlatformView.PaddingBottom);
+        });
+        Microsoft.Maui.Handlers.EditorHandler.Mapper.AppendToMapping("BorderlessEditor", (handler, _) =>
+            handler.PlatformView.Background = new ColorDrawable(Android.Graphics.Color.Transparent));
+#endif
 
         builder.Services.AddSingleton<IAppDataStore, DemoAppDataStore>();
         builder.Services.AddSingleton<INavigationService, MauiNavigationService>();

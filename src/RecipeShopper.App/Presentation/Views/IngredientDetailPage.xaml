@@ -12,7 +12,8 @@
         <VerticalStackLayout Padding="20" Spacing="14">
             <Border StrokeThickness="0">
                 <VerticalStackLayout HorizontalOptions="Center" Spacing="6">
-                    <Label FontSize="62" Text="{Binding Ingredient.Icon}" />
+                    <Label FontSize="62" HorizontalOptions="Center" IsVisible="{Binding Ingredient.HasImage, Converter={StaticResource InverseBoolConverter}}" Text="{Binding Ingredient.Icon}" />
+                    <Image Aspect="AspectFill" HeightRequest="140" IsVisible="{Binding Ingredient.HasImage}" Source="{Binding Ingredient.ImagePreviewPath}" WidthRequest="140" />
                     <Label Style="{StaticResource PageTitle}" HorizontalTextAlignment="Center" Text="{Binding Ingredient.Name}" />
                     <Label Style="{StaticResource Caption}" Text="{Binding Ingredient.MeasurementDescription}" />
                 </VerticalStackLayout>

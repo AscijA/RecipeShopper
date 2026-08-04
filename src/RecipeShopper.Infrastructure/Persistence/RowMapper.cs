@@ -70,6 +70,7 @@ internal static class RowMapper
         Name = value.Name.Trim(),
         NameKey = TextNormalization.NameKey(value.Name),
         IconKey = value.IconKey,
+        ImagePath = value.ImagePath,
         MeasurementFamily = value.MeasurementFamily.ToString(),
         BaseUnit = value.BaseUnit.Value
     });
@@ -79,6 +80,7 @@ internal static class RowMapper
         Id = Guid.Parse(row.Id),
         Name = row.Name,
         IconKey = row.IconKey,
+        ImagePath = row.ImagePath,
         MeasurementFamily = Enum.Parse<MeasurementFamily>(row.MeasurementFamily),
         BaseUnit = new UnitCode(row.BaseUnit)
     });

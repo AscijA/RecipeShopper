@@ -4,7 +4,7 @@ namespace RecipeShopper.Infrastructure.Persistence;
 
 internal static class DatabaseSchema
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 
     private static readonly string[] CreateStatements =
     [
@@ -26,6 +26,7 @@ internal static class DatabaseSchema
             NameKey TEXT NOT NULL UNIQUE,
             Name TEXT NOT NULL,
             IconKey TEXT NULL,
+            ImagePath TEXT NULL,
             MeasurementFamily TEXT NOT NULL,
             BaseUnit TEXT NOT NULL,
             ArchivedUtc TEXT NULL,
@@ -282,6 +283,15 @@ internal static class DatabaseSchema
                 )
                 """);
             connection.Execute("PRAGMA user_version = 2");
+        }
+
+        if (fromVersion < 3)
+        {
+            if (fromVersion >= 1)
+            {
+                connection.Execute("ALTER TABLE ingredients ADD COLUMN ImagePath TEXT NULL");
+            }
+            connection.Execute("PRAGMA user_version = 3");
         }
     }
 

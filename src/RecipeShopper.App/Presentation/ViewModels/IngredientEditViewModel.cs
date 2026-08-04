@@ -12,23 +12,46 @@ public sealed partial class IngredientEditViewModel : BaseViewModel, IQueryAttri
     private readonly IAppDataStore store;
     private readonly INavigationService navigation;
     private readonly IDialogService dialogs;
+    private readonly IImageService images;
     private Guid? ingredientId;
+    private string? relativeImagePath;
 
     [ObservableProperty] private string name = string.Empty;
     [ObservableProperty] private string icon = "🥣";
     [ObservableProperty] private string selectedFamily = "Masa";
     [ObservableProperty] private string baseUnit = "g";
+    [ObservableProperty] private string imagePreviewPath = string.Empty;
 
     public IReadOnlyList<string> Families { get; } = ["Masa", "Zapremina", "Komadi", "Posebna jedinica"];
-    public IReadOnlyList<string> Units { get; } = ["g", "kg", "ml", "l", "kom", "pakovanje", "kesica", "kutija", "boca", "tegla", "konzerva"];
+    public IReadOnlyList<string> Units { get; } = ["g", "kg", "ml", "l", "kom", "Šaka", "pakovanje", "kesica", "kutija", "boca", "tegla", "konzerva"];
     public ObservableCollection<PackageOfferItem> Offers { get; } = [];
+    public bool HasImage => !string.IsNullOrWhiteSpace(ImagePreviewPath);
 
-    public IngredientEditViewModel(IAppDataStore store, INavigationService navigation, IDialogService dialogs)
+    public IngredientEditViewModel(IAppDataStore store, INavigationService navigation, IDialogService dialogs, IImageService images)
     {
         this.store = store;
         this.navigation = navigation;
         this.dialogs = dialogs;
+        this.images = images;
         Title = "Nova namirnica";
+    }
+
+    partial void OnImagePreviewPathChanged(string value) => OnPropertyChanged(nameof(HasImage));
+
+    [RelayCommand]
+    private async Task PickImageAsync()
+    {
+        var path = await images.PickAndStoreAsync();
+        if (string.IsNullOrWhiteSpace(path)) return;
+        relativeImagePath = path;
+        ImagePreviewPath = Path.Combine(FileSystem.AppDataDirectory, path.Replace('/', Path.DirectorySeparatorChar));
+    }
+
+    [RelayCommand]
+    private void RemoveImage()
+    {
+        relativeImagePath = null;
+        ImagePreviewPath = string.Empty;
     }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -87,6 +110,7 @@ public sealed partial class IngredientEditViewModel : BaseViewModel, IQueryAttri
         ingredient ??= new IngredientItem();
         ingredient.Name = Name.Trim();
         ingredient.Icon = string.IsNullOrWhiteSpace(Icon) ? "🥣" : Icon.Trim();
+        ingredient.ImagePath = relativeImagePath;
         ingredient.MeasurementFamily = SelectedFamily switch
         {
             "Masa" => MeasurementFamily.Mass,
@@ -112,6 +136,10 @@ public sealed partial class IngredientEditViewModel : BaseViewModel, IQueryAttri
         Title = "Uredi namirnicu";
         Name = ingredient.Name;
         Icon = ingredient.Icon;
+        relativeImagePath = ingredient.ImagePath;
+        ImagePreviewPath = string.IsNullOrWhiteSpace(relativeImagePath)
+            ? string.Empty
+            : Path.Combine(FileSystem.AppDataDirectory, relativeImagePath.Replace('/', Path.DirectorySeparatorChar));
         SelectedFamily = ingredient.MeasurementFamily switch
         {
             MeasurementFamily.Mass => "Masa",

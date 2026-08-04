@@ -57,6 +57,7 @@ public sealed record IngredientDto
     public string? Id { get; init; }
     public string Name { get; init; } = string.Empty;
     public string? IconKey { get; init; }
+    public string? ImagePath { get; init; }
     public string MeasurementFamily { get; init; } = string.Empty;
     public string BaseUnit { get; init; } = string.Empty;
     public List<PackageDto> Packages { get; init; } = [];

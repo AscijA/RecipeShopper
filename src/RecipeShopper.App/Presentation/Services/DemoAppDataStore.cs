@@ -652,6 +652,7 @@ public sealed class DemoAppDataStore : IAppDataStore
                 Id = ingredient.Id,
                 Name = ingredient.Name,
                 Icon = ingredient.IconKey ?? "🥣",
+                ImagePath = ingredient.ImagePath,
                 MeasurementFamily = ToUiFamily(ingredient.MeasurementFamily),
                 BaseUnit = ingredient.BaseUnit,
                 IsArchived = ingredient.IsArchived
@@ -868,6 +869,7 @@ public sealed class DemoAppDataStore : IAppDataStore
             Id = item.Id,
             Name = item.Name.Trim(),
             IconKey = item.Icon,
+            ImagePath = item.ImagePath,
             MeasurementFamily = ToDomainFamily(item.MeasurementFamily),
             BaseUnit = new UnitCode(item.BaseUnit)
         };

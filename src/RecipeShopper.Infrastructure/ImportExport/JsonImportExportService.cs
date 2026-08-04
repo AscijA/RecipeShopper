@@ -106,7 +106,9 @@ public sealed class JsonImportExportService : IImportExportService
         var images = new List<ImageAssetDto>();
         if (_images is not null)
         {
-            foreach (var path in catalog.Recipes.Select(recipe => recipe.ImagePath).Where(path => !string.IsNullOrWhiteSpace(path)).Distinct(StringComparer.Ordinal))
+            foreach (var path in catalog.Recipes.Select(recipe => recipe.ImagePath)
+                         .Concat(catalog.Ingredients.Select(ingredient => ingredient.ImagePath))
+                         .Where(path => !string.IsNullOrWhiteSpace(path)).Distinct(StringComparer.Ordinal))
             {
                 var bytes = await _images.ReadAsync(path!, cancellationToken).ConfigureAwait(false);
                 if (bytes is null) continue;

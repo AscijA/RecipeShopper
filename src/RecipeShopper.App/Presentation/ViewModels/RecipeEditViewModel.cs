@@ -25,7 +25,7 @@ public sealed partial class RecipeEditViewModel : BaseViewModel, IQueryAttributa
     public ObservableCollection<string> Categories { get; } = [];
     public ObservableCollection<IngredientItem> AvailableIngredients { get; } = [];
     public ObservableCollection<RecipeIngredientDraft> Ingredients { get; } = [];
-    public ObservableCollection<string> Units { get; } = ["g", "kg", "ml", "l", "kom", "kašičica", "kašika", "šolja", "pakovanje"];
+    public ObservableCollection<string> Units { get; } = ["g", "kg", "ml", "l", "kom", "kašičica", "kašika", "šolja", "Šaka", "pakovanje"];
     public bool HasPhoto => !string.IsNullOrWhiteSpace(PhotoPreviewPath);
 
     public RecipeEditViewModel(IAppDataStore store, INavigationService navigation, IImageService images, IDialogService dialogs)
@@ -61,7 +61,6 @@ public sealed partial class RecipeEditViewModel : BaseViewModel, IQueryAttributa
             Icon = SelectedCatalogIngredient.Icon,
             Unit = SelectedCatalogIngredient.BaseUnit
         });
-        SelectedCatalogIngredient = null;
     }
 
     [RelayCommand]

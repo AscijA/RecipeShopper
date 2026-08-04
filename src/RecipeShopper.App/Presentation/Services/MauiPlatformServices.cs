@@ -4,6 +4,10 @@ using RecipeShopper.Application.Abstractions.Platform;
 using Foundation;
 using UserNotifications;
 #endif
+#if ANDROID
+using Android.Content;
+using Android.Views.InputMethods;
+#endif
 
 namespace RecipeShopper.App.Presentation.Services;
 
@@ -26,6 +30,22 @@ public sealed class MauiNavigationService : INavigationService
     public Task GoBackAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+#if IOS
+        Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+            UIKit.UIApplication.SharedApplication.KeyWindow?.EndEditing(true));
+#endif
+#if ANDROID
+        Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+        {
+            var activity = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity;
+            var focusedView = activity?.CurrentFocus;
+            if (activity?.GetSystemService(Context.InputMethodService) is InputMethodManager keyboard && focusedView is not null)
+            {
+                keyboard.HideSoftInputFromWindow(focusedView.WindowToken, HideSoftInputFlags.None);
+                focusedView.ClearFocus();
+            }
+        });
+#endif
         return Shell.Current.GoToAsync("..");
     }
 }

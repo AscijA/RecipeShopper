@@ -34,7 +34,10 @@
                             <TapGestureRecognizer Command="{Binding Source={x:Reference IngredientsRoot}, Path=BindingContext.OpenCommand}" CommandParameter="{Binding .}" />
                         </Border.GestureRecognizers>
                         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                            <Label FontSize="27" Text="{Binding Icon}" VerticalOptions="Center" />
+                            <Grid HeightRequest="42" WidthRequest="42" VerticalOptions="Center">
+                                <Label FontSize="27" HorizontalOptions="Center" IsVisible="{Binding HasImage, Converter={StaticResource InverseBoolConverter}}" Text="{Binding Icon}" VerticalOptions="Center" />
+                                <Image Aspect="AspectFill" IsVisible="{Binding HasImage}" Source="{Binding ImagePreviewPath}" />
+                            </Grid>
                             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
                                 <Label FontFamily="OpenSansSemibold" Text="{Binding Name}" />
                                 <Label Style="{StaticResource Caption}" Text="{Binding MeasurementDescription}" />
