@@ -4,7 +4,7 @@ namespace RecipeShopper.Infrastructure.Persistence;
 
 internal static class DatabaseSchema
 {
-    public const int CurrentVersion = 3;
+    public const int CurrentVersion = 4;
 
     private static readonly string[] CreateStatements =
     [
@@ -293,6 +293,19 @@ internal static class DatabaseSchema
             }
             connection.Execute("PRAGMA user_version = 3");
         }
+
+        if (fromVersion < 4)
+        {
+            const string timestamp = "2000-01-01T00:00:00.0000000+00:00";
+            connection.Execute(
+                "INSERT OR IGNORE INTO recipe_categories (Id, NameKey, Name, IconKey, SortOrder, ArchivedUtc, CreatedUtc, UpdatedUtc) VALUES (?, ?, ?, ?, ?, NULL, ?, ?)",
+                "00000000-0000-0000-0001-000000000011", TextNormalization.NameKey("Ručak"), "Ručak", "category-lunch", 9, timestamp, timestamp);
+            connection.Execute(
+                "INSERT OR IGNORE INTO recipe_categories (Id, NameKey, Name, IconKey, SortOrder, ArchivedUtc, CreatedUtc, UpdatedUtc) VALUES (?, ?, ?, ?, ?, NULL, ?, ?)",
+                "00000000-0000-0000-0001-000000000012", TextNormalization.NameKey("Večera"), "Večera", "category-dinner", 10, timestamp, timestamp);
+            connection.Execute("UPDATE recipe_categories SET SortOrder = 11 WHERE Id = ?", "00000000-0000-0000-0001-000000000010");
+            connection.Execute("PRAGMA user_version = 4");
+        }
     }
 
     private static void Seed(SQLiteConnection connection)
@@ -309,6 +322,8 @@ internal static class DatabaseSchema
             ("00000000-0000-0000-0001-000000000007", "Vegetarijansko", "category-vegetarian"),
             ("00000000-0000-0000-0001-000000000008", "Salata", "category-salad"),
             ("00000000-0000-0000-0001-000000000009", "Doručak", "category-breakfast"),
+            ("00000000-0000-0000-0001-000000000011", "Ručak", "category-lunch"),
+            ("00000000-0000-0000-0001-000000000012", "Večera", "category-dinner"),
             ("00000000-0000-0000-0001-000000000010", "Ostalo", "category-other")
         };
 

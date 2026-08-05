@@ -19,7 +19,10 @@ public sealed class InfrastructureIntegrationTests
         Assert.Equal(DatabaseSchema.CurrentVersion, await fixture.Database.GetSchemaVersionAsync());
         Assert.True(await fixture.Database.AreForeignKeysEnabledAsync());
         Assert.Equal("wal", (await fixture.Database.GetJournalModeAsync()).ToLowerInvariant());
-        Assert.Equal(10, (await fixture.Catalog.GetCategoriesAsync()).Count);
+        var categories = await fixture.Catalog.GetCategoriesAsync();
+        Assert.Equal(12, categories.Count);
+        Assert.Contains(categories, category => category.Name == "Ručak");
+        Assert.Contains(categories, category => category.Name == "Večera");
         Assert.Equal(6, (await fixture.Catalog.GetPackageTypesAsync()).Count);
         Assert.Equal(4, (await fixture.MealPlan.GetSlotsAsync()).Count);
         Assert.Equal("BAM", (await new SettingsRepository(fixture.Database).GetAsync()).CurrencyCode);

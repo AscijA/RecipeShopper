@@ -9,8 +9,10 @@ public sealed class DefaultCatalogTests
     {
         var categories = DefaultCatalog.CreateCategories();
 
-        Assert.Equal(10, categories.Count);
+        Assert.Equal(12, categories.Count);
         Assert.Equal("Govedina", categories[0].Name);
+        Assert.Contains(categories, category => category.Name == "Ručak");
+        Assert.Contains(categories, category => category.Name == "Večera");
         Assert.Equal("Ostalo", categories[^1].Name);
         Assert.Equal(Enumerable.Range(0, categories.Count), categories.Select(category => category.SortOrder));
         Assert.All(categories, category => Assert.False(string.IsNullOrWhiteSpace(category.IconKey)));

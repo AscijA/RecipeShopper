@@ -1132,6 +1132,8 @@ public sealed class DemoAppDataStore : IAppDataStore
         "category-vegetarian" => "🥬",
         "category-salad" => "🥗",
         "category-breakfast" => "🍳",
+        "category-lunch" => "🍛",
+        "category-dinner" => "🍽️",
         _ => "🍽️"
     };
 
@@ -1146,6 +1148,8 @@ public sealed class DemoAppDataStore : IAppDataStore
         "Vegetarijansko" => "category-vegetarian",
         "Salata" => "category-salad",
         "Doručak" => "category-breakfast",
+        "Ručak" => "category-lunch",
+        "Večera" => "category-dinner",
         _ => "category-other"
     };
 
@@ -1171,7 +1175,7 @@ public sealed class DemoAppDataStore : IAppDataStore
         {
             ("Govedina", "🥩"), ("Piletina", "🍗"), ("Riba", "🐟"), ("Supa/Čorba", "🍲"),
             ("Tijesto", "🥖"), ("Slatko", "🍰"), ("Vegetarijansko", "🥬"), ("Salata", "🥗"),
-            ("Doručak", "🍳"), ("Ostalo", "🍽️")
+            ("Doručak", "🍳"), ("Ručak", "🍛"), ("Večera", "🍽️"), ("Ostalo", "🍽️")
         })
         {
             Categories.Add(new CategoryItem

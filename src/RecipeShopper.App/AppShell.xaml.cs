@@ -13,10 +13,10 @@ public partial class AppShell : Shell
         {
             Items =
             {
-                CreateTab<RecipesPage>(services, "Recepti", "tab_recipes.svg", "recipes"),
-                CreateTab<ShoppingPage>(services, "Kupovina", "tab_cart.svg", "shopping"),
-                CreateTab<IngredientsPage>(services, "Namirnice", "tab_ingredients.svg", "ingredients"),
-                CreateTab<SettingsPage>(services, "Postavke", "tab_settings.svg", "settings")
+                CreateTab<RecipesPage>(services, "Recepti", TabIcon("tab_recipes"), "recipes"),
+                CreateTab<ShoppingPage>(services, "Kupovina", TabIcon("tab_cart"), "shopping"),
+                CreateTab<IngredientsPage>(services, "Namirnice", TabIcon("tab_ingredients"), "ingredients"),
+                CreateTab<SettingsPage>(services, "Postavke", TabIcon("tab_settings"), "settings")
             }
         });
 
@@ -36,4 +36,13 @@ public partial class AppShell : Shell
             Route = route,
             ContentTemplate = new DataTemplate(() => services.GetRequiredService<TPage>())
         };
+
+    private static string TabIcon(string name)
+    {
+#if IOS
+        return $"{name}_ios.png";
+#else
+        return $"{name}.svg";
+#endif
+    }
 }

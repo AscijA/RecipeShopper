@@ -15,6 +15,8 @@ public static class DefaultCatalog
         ("Vegetarijansko", "category-vegetarian"),
         ("Salata", "category-salad"),
         ("Doručak", "category-breakfast"),
+        ("Ručak", "category-lunch"),
+        ("Večera", "category-dinner"),
         ("Ostalo", "category-other")
     ];
 
